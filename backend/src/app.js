@@ -89,6 +89,13 @@ app.use((req,res,next)=>{
     }
 })
 
+// Add fake user ID (TODO: replace with Auth0 user ID)
+app.use((req, res, next) => {
+    req.user = req.user || {};
+    req.user.userId = 'abcd';
+    next();
+});
+
 // Express Routes
 app.get(`/`, (req, res) => res.status(200).send('alive'));
 app.use(allRoutes);
