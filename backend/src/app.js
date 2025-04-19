@@ -3,6 +3,7 @@ import http from "http";
 import {Server} from 'socket.io';
 import expressSession from "express-session";
 import sharedSession from 'express-socket.io-session';
+import { auth } from 'express-openid-connect';
 import express from "express";
 import helmet from "helmet";
 import {env} from "./config/env.js";
@@ -11,6 +12,7 @@ import {addArtificialDelay} from "./middleware/delayMiddleware.js";
 import {setSocketIOInstance} from "./sockets/socketHandler.js";
 import {RedisStore} from "connect-redis";
 import {connectToDB} from "./config/mongo.js";
+import redisClient from "./config/redis.js";
 
 const app = express();
 
@@ -67,6 +69,16 @@ app.use((req, res, next) => {
     return dynamicSession(req, res, next);
 });
 
+app.use(auth({
+    secret: env.auth0Secret,
+    clientID: env.auth0ClientId,
+    clientSecret: env.auth0ClientSecret,
+    issuerBaseURL: env.auth0IssuerBaseUrl,
+    baseURL: env.auth0BaseUrl,
+    authRequired: false,
+    auth0Logout: true
+}));
+
 // Have an artificial delay on all routes in dev mode so we can test actual network functioning
 app.use((req,res,next)=>{
     if(env.devMode){
@@ -90,31 +102,17 @@ const io = new Server(server, {cors: corsOptions});
 setSocketIOInstance(io);
 
 io.use((socket, next) => {
-    // TODO: no authentication for now (especially not passport based)...
-    // const origin = socket.handshake.headers.origin || '';
-    // const dynamicSession = buildSessionMiddleware(origin);
-    // sharedSession(dynamicSession, { autoSave: true })(socket, async () => {
-    //     const userId = socket.handshake?.session?.passport?.user;
-    //
-    //     if (!userId) {
-    //         return next(new Error("Unauthenticated"));
-    //     }
-    //
-    //     try {
-    //         const user = await new Promise((resolve, reject) => {
-    //             passport.deserializeUser(userId, (err, user) => {
-    //                 if (err) return reject(err);
-    //                 resolve(user);
-    //             });
-    //         });
-    //
-    //         if (!user) return next(new Error("User not found"));
-    //         socket.request.user = user;
-    //         return next();
-    //     } catch (err) {
-    //         return next(err);
-    //     }
-    // });
+    const origin = socket.handshake.headers.origin || '';
+    // share the very same session with the WS connection
+    sharedSession(buildSessionMiddleware(origin), { autoSave: true })(
+        socket,
+        () => {
+            const user = socket.handshake?.session?.oidc?.user; // Auth0 user
+            if (!user) return next(new Error('Unauthorized (no Auth0 user)'));
+            socket.user = user;
+            next();
+        }
+    );
 });
 
 

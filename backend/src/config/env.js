@@ -20,6 +20,12 @@ export const env = {
     redisPort: process.env.REDIS_PORT,
     redisPassword: process.env.REDIS_PASSWORD,
 
+    auth0ClientId      : process.env.AUTH0_CLIENT_ID,
+    auth0ClientSecret  : process.env.AUTH0_CLIENT_SECRET,
+    auth0IssuerBaseUrl : process.env.AUTH0_ISSUER_BASE_URL,
+    auth0BaseUrl       : process.env.AUTH0_BASE_URL,
+    auth0Secret        : process.env.AUTH0_SECRET,
+
     mongoURI: process.env.MONGO_URI,
 
     passportSecret: process.env.PASSPORT_SECRET || 'abcdefghijklmnopqrstuvwxyz',
