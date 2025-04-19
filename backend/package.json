@@ -6,13 +6,15 @@
   "scripts": {
     "start": "NODE_ENV=production node src/app.js",
     "dev": "NODE_ENV=development nodemon src/app.js",
-    "dev-start": "NODE_ENV=development node src/app.js"
+    "dev-start": "NODE_ENV=development node src/app.js",
+    "windows-dev": "set NODE_ENV=development&& nodemon src/app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "backend": "file:",
     "connect-redis": "^8.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
@@ -34,6 +36,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.9"
   }
 }
