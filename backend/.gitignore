@@ -1,0 +1,5 @@
+*.env
+*.env.prod
+/node_modules
+/.idea
+/src/dev-test/
