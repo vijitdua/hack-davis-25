@@ -1,5 +1,9 @@
-import "@/styles/globals.css";
+import EnabledContextsAndWrappers from "@/enabledContextsAndWrappers";
 
-export default function App({ Component, pageProps }) {
-  return <Component {...pageProps} />;
+export default function App({Component, pageProps}) {
+  return (
+      <EnabledContextsAndWrappers>
+        <Component {...pageProps} />
+      </EnabledContextsAndWrappers>
+  );
 }
