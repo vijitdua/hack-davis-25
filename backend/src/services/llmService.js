@@ -1,8 +1,15 @@
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+//import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai";
 import { env } from "../config/env.js";
+import { GoogleGenerativeAI } from '@google/generative-ai'; // Ensure you're using the correct import
 
 dotenv.config();
+
+if (!env.geminiApiKey) {
+    throw new Error("Gemini API key is missing. Please set GEMINI_API_KEY in the environment variables.");
+}
+
 
 const genAI = new GoogleGenerativeAI(env.geminiApiKey);
 
@@ -60,4 +67,25 @@ Journal: ${journal}
       analysis: ""
     };
   }
+}
+
+export async function summarizeAnalysesWithLLM(analyses) {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    const prompt = `
+You are an AI therapist. The following are 5 days of analysis entries. Summarize the overall emotional and psychological themes in 1 paragraph.
+
+Analyses:
+${analyses.map((text, i) => `Day ${i + 1}: ${text}`).join("\n")}
+`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = await response.text();
+        return text.trim();
+    } catch (err) {
+        console.error("Gemini Summary Error:", err);
+        return "Sorry, couldn't generate a summary at this time.";
+    }
 }
