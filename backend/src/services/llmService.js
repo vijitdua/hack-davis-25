@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 //import { GoogleGenerativeAI } from '@google/generative-ai';
-import { GoogleGenAI } from "@google/genai";
+
 import { env } from "../config/env.js";
 import { GoogleGenerativeAI } from '@google/generative-ai'; // Ensure you're using the correct import
 
@@ -14,81 +14,83 @@ if (!env.geminiApiKey) {
 const genAI = new GoogleGenerativeAI(env.geminiApiKey);
 
 export async function generateLLMFeedback({ emotion, impactFactor, journal }) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const prompt = `
-You are a compassionate AI therapist. Given the user's emotion, impact factor, and journal entry, generate:
-
-1. A short empathetic feedback message.
-2. A detailed therapeutic analysis based on their journal.
-
-Reply strictly in this JSON format:
-{
-  "feedback": "short feedback",
-  "analysis": "detailed therapeutic analysis"
-}
-
-Emotion: ${emotion}
-Impact Factor: ${impactFactor}
-Journal: ${journal}
-`;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    // Use a regular expression to find the JSON block
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-
-    if (jsonMatch && jsonMatch[0]) {
-      try {
-        const parsedJSON = JSON.parse(jsonMatch[0]);
-        return { feedback: parsedJSON.feedback, analysis: parsedJSON.analysis };
-      } catch (parseError) {
-        console.error("JSON Parse Error:", parseError);
-        console.error("Problematic JSON:", jsonMatch[0]);
-        return {
-          feedback: "Sorry, there was an issue processing the feedback.",
-          analysis: ""
-        };
-      }
-    } else {
-      console.error("Could not find JSON in the response:", text);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  
+    const prompt = `
+  You are a compassionate AI therapist. Based on the user's emotion and journal, respond with:
+  
+  1. A **final**, short empathetic message that helps the user feel seen and supported.
+  2. A detailed therapeutic analysis to help the user reflect and grow.
+  3. An emotion classification score on a 1–5 scale based on their overall mood:
+  
+     - 1 = very sad
+     - 2 = slightly sad
+     - 3 = neutral
+     - 4 = happy
+     - 5 = very happy
+  
+  Do not ask follow-up questions or initiate a conversation. Reply strictly in this JSON format:
+  
+  {
+    "feedback": "short empathetic message",
+    "analysis": "therapeutic insight",
+    "emotionScore": number from 1 to 5
+  }
+  
+  Emotion: ${emotion}
+  Impact Factor: ${impactFactor}
+  Journal: ${journal}
+  `;
+  
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+  
+      const start = text.indexOf("{");
+      const end = text.lastIndexOf("}");
+      const parsed = JSON.parse(text.substring(start, end + 1));
+  
       return {
-        feedback: "Sorry, the feedback format was unexpected.",
-        analysis: ""
+        feedback: parsed.feedback,
+        analysis: parsed.analysis,
+        emotionScore: parsed.emotionScore
+      };
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      return {
+        feedback: "Sorry, we couldn't generate feedback right now.",
+        analysis: "",
+        emotionScore: 3 // Default to neutral on failure
       };
     }
-  } catch (err) {
-    console.error("Gemini Error:", err);
-    return {
-      feedback: "Sorry, we couldn't generate feedback right now.",
-      analysis: ""
-    };
   }
-}
-
-export async function summarizeAnalysesWithLLM(analyses) {
+  
+  export async function summarizeAnalysesWithLLM(analyses) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
+  
     const prompt = `
-You are an AI therapist. The following are 5 days of analysis entries. Summarize the overall emotional and psychological themes in 1 paragraph.
-
-Analyses:
-${analyses.map((text, i) => `Day ${i + 1}: ${text}`).join("\n")}
-`;
-
+  You are an AI therapist. The following text contains emotional and psychological analyses written over the past several days.
+  
+  Your task is to read all of them and produce **one coherent paragraph** that summarizes the user's overall emotional and psychological themes. Focus on key patterns, shifts in mood, recurring concerns, and overall mental state.
+  
+  Do not list days or separate them. Just write a clean, compassionate, high-level summary.
+  
+  Analyses:
+  ${analyses.join("\n\n")}
+  `;
+  
     try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = await response.text();
-        return text.trim();
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = await response.text();
+      return text.trim();
     } catch (err) {
-        console.error("Gemini Summary Error:", err);
-        return "Sorry, couldn't generate a summary at this time.";
+      console.error("Gemini Summary Error:", err);
+      return "Sorry, couldn't generate a summary at this time.";
     }
-}
+  }
+  
 
 
 
@@ -102,17 +104,26 @@ export async function generateEmotionForecast(entries) {
   Journal: ${entry.journal}`;
     }).join('\n\n');
   
+
     const prompt = `
-  Based on the following journal entries, predict the user's overall emotional state for the next 2 days.
-  Return JSON like this:
-  [
-    {"day": "YYYY-MM-DD", "overall_emotions": "some emotion"},
-    {"day": "YYYY-MM-DD", "overall_emotions": "another emotion"}
-  ]
-  
-  Journal Entries:
-  ${entryText}
-  `;
+    You are an AI therapist assistant. Based on the user's recent journal entries, predict their overall emotional state for the next two days. Do not ask questions or request more input.
+    
+    Use this 1–5 scale:
+    1 = very sad
+    2 = slightly sad
+    3 = neutral
+    4 = happy
+    5 = very happy
+    
+    Return a JSON array in this format:
+    [
+      { "day": "YYYY-MM-DD", "overall_emotion_score": 1–5 },
+      { "day": "YYYY-MM-DD", "overall_emotion_score": 1–5 }
+    ]
+    
+    Journal Entries:
+    ${entryText}
+    `;
   
     try {
       const result = await model.generateContent(prompt);
