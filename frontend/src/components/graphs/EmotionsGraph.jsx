@@ -17,7 +17,7 @@ export default function EmotionsGraph({}) {
                 const res = await axios.get(`${env.backendUrl}/api/journal/summary`);
                 const formatted = res.data.map(entry => ({
                     day: new Date(entry.day).toLocaleDateString('en-US', { weekday: 'short' }),
-                    mood: Number(entry.overall_emotion) || 3,
+                    mood: (Number(entry["overall_emotion_score"]) || 3) - 1,
                 }));
                 console.log(formatted);
                 setPast(formatted);
@@ -31,7 +31,7 @@ export default function EmotionsGraph({}) {
                 const res = await axios.get(`${env.backendUrl}/api/journal/predict`);
                 const formatted =  res.data.map(entry => ({
                     day: new Date(entry.day).toLocaleDateString('en-US', { weekday: 'short' }),
-                    mood: Number(entry.predicted_emotion) || 3,
+                    mood: (Number(entry['predicted_emotion_score']) || 3) -1,
                 }));
                 console.log(formatted);
                 setFuture(formatted);
