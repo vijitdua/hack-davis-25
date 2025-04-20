@@ -6,8 +6,8 @@ const journalEntrySchema = new mongoose.Schema({
   impactFactor: { type: String, required: true },
   journal: { type: String, required: true },
   feedback: { type: String },                       // From LLM
-  analysis: { type: String },                       // Detailed LLM output
-  generatedAt: { type: Date, default: Date.now },   // Time LLM feedback was generated
+  analysis: { type: String },                      
+  generatedAt: { type: Date, default: Date.now },   
 }, { timestamps: true }); // adds `createdAt` and `updatedAt` automatically
 
 const JournalEntry = mongoose.model('JournalEntry', journalEntrySchema);
