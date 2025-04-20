@@ -12,7 +12,7 @@ export const createJournalEntry = async (req, res) => {
 
     const { emotion, impactFactor, journal } = req.body;
 
-    const { feedback, analysis } = await generateLLMFeedback({ emotion, impactFactor, journal });
+    const { feedback, analysis, emotionScore } = await generateLLMFeedback({ emotion, impactFactor, journal });
 
     const newEntry = new JournalEntry({
       userId,
@@ -21,6 +21,7 @@ export const createJournalEntry = async (req, res) => {
       journal,
       feedback,
       analysis,
+      emotionScore,
       generatedAt: new Date()
     });
 
@@ -44,42 +45,45 @@ export const getEmotionSummary = async (req, res) => {
       {
         $match: {
           userId,
-          createdAt: { $gte: fiveDaysAgo }
+          createdAt: { $gte: fiveDaysAgo },
+          emotionScore: { $exists: true }
         }
       },
       {
         $group: {
           _id: {
             day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-            emotion: "$emotion"
+            score: "$emotionScore"
           },
           count: { $sum: 1 }
         }
       },
       {
-        $sort: { "_id.day": 1, count: -1 } // sort by day, then by emotion count
+        $sort: { "_id.day": 1, count: -1 } // group by day, get most frequent score
       },
       {
         $group: {
           _id: "$_id.day",
-          overall_emotion: { $first: "$_id.emotion" }
+          overall_emotion_score: { $first: "$_id.score" }
         }
       },
       {
         $project: {
           _id: 0,
           day: "$_id",
-          overall_emotion: 1
+          overall_emotion_score: 1
         }
       }
     ]);
-    console.log("Emotion summary result:", result);
+
+    console.log("Emotion score summary:", result);
     res.status(200).json(result);
   } catch (error) {
     console.error("Error getting emotion summary:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 
