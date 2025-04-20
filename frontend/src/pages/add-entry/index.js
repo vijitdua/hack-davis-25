@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { Box, Button, Typography, TextField, Slider, Chip, CircularProgress } from "@mui/material";
+import {useState} from "react";
+import {Box, Button, Typography, TextField, Slider, Chip, CircularProgress} from "@mui/material";
 import axios from "axios";
 
 const moodData = [
-    { label: "😢", value: 0, name: "Really Unpleasant", flower: "wilted rose" },
-    { label: "🙁", value: 1, name: "Slightly Unpleasant", flower: "drooping daisy" },
-    { label: "😐", value: 2, name: "Neutral", flower: "simple tulip" },
-    { label: "🙂", value: 3, name: "Happy", flower: "sunflower" },
-    { label: "😄", value: 4, name: "Really Happy", flower: "cherry blossom" },
+    {label: "😢", value: 0, name: "Really Unpleasant", flower: "wilted-rose.png"},
+    {label: "🙁", value: 1, name: "Slightly Unpleasant", flower: "dropping-daisy.webp"},
+    {label: "😐", value: 2, name: "Neutral", flower: "simple-tulip.webp"},
+    {label: "🙂", value: 3, name: "Happy", flower: "sunflower.png"},
+    {label: "😄", value: 4, name: "Really Happy", flower: "cherry-blossom.webp"},
 ];
 
 const impactingFactors = [
@@ -47,22 +47,32 @@ export default function Index() {
             {step === 0 && (
                 <>
                     <Typography variant="h5" mb={2}>How are you feeling?</Typography>
-                    <Slider
-                        min={0}
-                        max={4}
-                        step={1}
-                        value={mood}
-                        onChange={(e, val) => setMood(val)}
-                        marks={moodData.map(m => ({ value: m.value, label: m.label }))}
-                        sx={{ width: 300 }}
-                    />
-                    <Typography mt={2}>{moodData[mood].name}</Typography>
-                    <img
-                        src={`/flowers/${moodData[mood].flower}.png`}
-                        alt={moodData[mood].flower}
-                        style={{ width: 100, height: 100, transition: "all 0.4s ease" }}
-                    />
-                    <Button onClick={() => setStep(1)} sx={{ mt: 3 }} variant="contained">Next</Button>
+                    <Box sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                    }}>
+                        <Slider
+                            orientation="vertical"
+                            min={0}
+                            max={4}
+                            step={1}
+                            value={mood}
+                            onChange={(e, val) => setMood(val)}
+                            marks={moodData.map(m => ({value: m.value, label: m.label}))}
+                            sx={{
+                                height: 250,
+                            }}
+                        />
+                        <Box display="flex" flexDirection="column" alignItems="center">
+                            <Typography mt={2}>{moodData[mood].name}</Typography>
+                            <img
+                                src={`/flowers/${moodData[mood].flower}`}
+                                alt={moodData[mood].flower}
+                                style={{width: 180, height: 180, transition: "all 0.4s ease"}}
+                            />
+                        </Box>
+                    </Box>
+                    <Button onClick={() => setStep(1)} sx={{mt: 3}} variant="contained">Next</Button>
                 </>
             )}
 
@@ -83,7 +93,7 @@ export default function Index() {
                             />
                         ))}
                     </Box>
-                    <Button onClick={() => setStep(2)} sx={{ mt: 3 }} variant="contained">Next</Button>
+                    <Button onClick={() => setStep(2)} sx={{mt: 3}} variant="contained">Next</Button>
                 </>
             )}
 
@@ -99,8 +109,8 @@ export default function Index() {
                         onChange={(e) => setEntry(e.target.value)}
                         placeholder="Write anything you'd like to reflect on..."
                     />
-                    <Button onClick={handleSubmit} sx={{ mt: 3 }} variant="contained" disabled={loading}>
-                        {loading ? <CircularProgress size={24} /> : "Submit"}
+                    <Button onClick={handleSubmit} sx={{mt: 3}} variant="contained" disabled={loading}>
+                        {loading ? <CircularProgress size={24}/> : "Submit"}
                     </Button>
                 </>
             )}
