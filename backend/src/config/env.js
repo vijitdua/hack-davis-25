@@ -26,6 +26,8 @@ export const env = {
     auth0BaseUrl       : process.env.AUTH0_BASE_URL,
     auth0Secret        : process.env.AUTH0_SECRET,
 
+    
+    geminiApiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
     mongoURI: process.env.MONGO_URI,
 
     passportSecret: process.env.PASSPORT_SECRET || 'abcdefghijklmnopqrstuvwxyz',

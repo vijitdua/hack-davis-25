@@ -17,7 +17,7 @@ import redisClient from "./config/redis.js";
 const app = express();
 
 app.use(helmet());
-
+// req.user.userId
 const corsOptions = {
     origin: (origin, callback) => {
         if (env.devMode || !origin) {
