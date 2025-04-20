@@ -89,3 +89,50 @@ ${analyses.map((text, i) => `Day ${i + 1}: ${text}`).join("\n")}
         return "Sorry, couldn't generate a summary at this time.";
     }
 }
+
+
+
+export async function generateEmotionForecast(entries) {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  
+    const entryText = entries.map(entry => {
+      return `Date: ${entry.createdAt.toISOString().split('T')[0]}
+  Emotion: ${entry.emotion}
+  Impact Factor: ${entry.impactFactor}
+  Journal: ${entry.journal}`;
+    }).join('\n\n');
+  
+    const prompt = `
+  Based on the following journal entries, predict the user's overall emotional state for the next 2 days.
+  Return JSON like this:
+  [
+    {"day": "YYYY-MM-DD", "overall_emotions": "some emotion"},
+    {"day": "YYYY-MM-DD", "overall_emotions": "another emotion"}
+  ]
+  
+  Journal Entries:
+  ${entryText}
+  `;
+  
+    try {
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
+  
+      const start = text.indexOf("[");
+      const end = text.lastIndexOf("]");
+      const parsed = JSON.parse(text.substring(start, end + 1));
+      return parsed;
+    } catch (error) {
+      console.error("LLM Forecast Error:", error);
+      return [
+        { day: getFutureDate(1), overall_emotions: "unknown" },
+        { day: getFutureDate(2), overall_emotions: "unknown" }
+      ];
+    }
+  }
+  
+  function getFutureDate(offsetDays) {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    return date.toISOString().split('T')[0];
+  }

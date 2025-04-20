@@ -3,6 +3,7 @@
 import JournalEntry from "../models/JournalEntry.js";
 import { generateLLMFeedback } from "../services/llmService.js";
 import { summarizeAnalysesWithLLM } from "../services/llmService.js";
+import { generateEmotionForecast } from "../services/llmService.js"; 
 
 export const createJournalEntry = async (req, res) => {
   try {
@@ -110,5 +111,30 @@ export const getAnalysisSummary = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+export const predictEmotions = async (req, res) => {
+  try {
+    const userId = req.user?.userId || "abcd";
+
+    
+    const recentEntries = await JournalEntry.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    if (recentEntries.length === 0) {
+      return res.status(404).json({ message: "No journal entries found." });
+    }
+
+    const forecast = await generateEmotionForecast(recentEntries);
+
+    res.status(200).json(forecast);
+  } catch (error) {
+    console.error("Error predicting emotions:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 
 

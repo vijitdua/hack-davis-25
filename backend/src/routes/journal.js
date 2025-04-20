@@ -1,7 +1,7 @@
 import {Router} from 'express';
 import {createJournalEntry} from '../controllers/journalController.js';
-import {getEmotionSummary} from '../controllers/journalController.js'; 
-import { getAnalysisSummary } from '../controllers/journalController.js';
+import {getEmotionSummary, getAnalysisSummary, predictEmotions} from '../controllers/journalController.js'; 
+
 
 const router = Router();
 
@@ -12,5 +12,7 @@ router.get("/journal/summary", getEmotionSummary); // New route for emotion summ
 
 
 router.get('/journal/analysis-summary', getAnalysisSummary);
+
+router.get('/journal/predict', predictEmotions); 
 
 export default router;
