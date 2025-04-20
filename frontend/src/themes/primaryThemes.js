@@ -124,6 +124,21 @@ let darkTheme = createTheme({
         },
     },
     components: {
+        MuiButton: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 12,
+                    textTransform: 'none',
+                },
+            },
+        },
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 12,
+                },
+            },
+        },
         MuiCssBaseline: {
             styleOverrides: {
                 body: {
