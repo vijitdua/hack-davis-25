@@ -147,3 +147,34 @@ export async function generateEmotionForecast(entries) {
     date.setDate(date.getDate() + offsetDays);
     return date.toISOString().split('T')[0];
   }
+
+
+
+  export async function chatWithMomoLLM(message, emotionalContext) {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  
+    const contextText = emotionalContext.map(e => 
+      `Date: ${e.date}, Emotion: ${e.emotion} (Score: ${e.score})\nAnalysis: ${e.analysis}`
+    ).join('\n\n');
+  
+    const prompt = `
+  You are Momo, a warm and emotionally aware AI therapist. You're talking to a user who has shared the following emotional background over the past few days:
+  
+  ${contextText}
+  
+  Now, respond compassionately and conversationally to their new message.
+  
+  User: ${message}
+  Momo:
+  `;
+  
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text().trim();
+    } catch (err) {
+      console.error("Momo LLM Error:", err);
+      return "Sorry, I'm having trouble responding right now. Let's try again soon.";
+    }
+  }
+  
