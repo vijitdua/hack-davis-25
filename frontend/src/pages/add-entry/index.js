@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {Box, Button, Typography, TextField, Slider, Chip, CircularProgress} from "@mui/material";
 import axios from "axios";
 
@@ -17,6 +17,7 @@ const impactingFactors = [
 ];
 
 export default function Index() {
+
     const [step, setStep] = useState(0);
     const [mood, setMood] = useState(2);
     const [factors, setFactors] = useState([]);
@@ -42,6 +43,34 @@ export default function Index() {
         }
     };
 
+    const scrollThreshold = 50;
+    let scrollAccumulator = 0;
+    const imageRef = useRef(null);
+
+    useEffect(() => {
+        const imageEl = imageRef.current;
+
+        const handleWheel = (e) => {
+            e.preventDefault(); // 👈 prevent page scroll
+
+            scrollAccumulator += e.deltaY;
+
+            if (scrollAccumulator > scrollThreshold && mood > 0) {
+                setMood(prev => prev - 1);
+                scrollAccumulator = 0;
+            } else if (scrollAccumulator < -scrollThreshold && mood < 4) {
+                setMood(prev => prev + 1);
+                scrollAccumulator = 0;
+            }
+        };
+
+        imageEl?.addEventListener("wheel", handleWheel, { passive: false });
+
+        return () => {
+            imageEl?.removeEventListener("wheel", handleWheel);
+        };
+    }, [mood]);
+
     return (
         <Box p={4} display="flex" flexDirection="column" alignItems="center">
             {step === 0 && (
@@ -50,6 +79,7 @@ export default function Index() {
                     <Box sx={{
                         display: "flex",
                         flexDirection: "row",
+                        justifyContent: "space-between",
                     }}>
                         <Slider
                             orientation="vertical"
@@ -61,15 +91,27 @@ export default function Index() {
                             marks={moodData.map(m => ({value: m.value, label: m.label}))}
                             sx={{
                                 height: 250,
+                                '& .MuiSlider-markLabel': {
+                                    fontSize: '1.2rem',
+                                    left: 'auto',
+                                    right: '40px', // 👈 tweak as needed
+                                    transform: 'none', // disables centering
+                                    textAlign: 'right',
+                                }
                             }}
                         />
                         <Box display="flex" flexDirection="column" alignItems="center">
                             <Typography mt={2}>{moodData[mood].name}</Typography>
-                            <img
-                                src={`/flowers/${moodData[mood].flower}`}
-                                alt={moodData[mood].flower}
-                                style={{width: 180, height: 180, transition: "all 0.4s ease"}}
-                            />
+                            <Box
+                                ref={imageRef}
+                                sx={{ cursor: "grab" }}
+                            >
+                                <img
+                                    src={`/flowers/${moodData[mood].flower}`}
+                                    alt={moodData[mood].flower}
+                                    style={{width: 180, height: 180, transition: "all 0.4s ease"}}
+                                />
+                            </Box>
                         </Box>
                     </Box>
                     <Button onClick={() => setStep(1)} sx={{mt: 3}} variant="contained">Next</Button>
