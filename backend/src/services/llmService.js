@@ -1,13 +1,13 @@
 import dotenv from 'dotenv';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import {env} from "./config/env.js";
+import { env } from "../config/env.js";
 
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(env.geminiApiKey);
 
 export async function generateLLMFeedback({ emotion, impactFactor, journal }) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `
 You are a compassionate AI therapist. Given the user's emotion, impact factor, and journal entry, generate:
@@ -31,13 +31,28 @@ Journal: ${journal}
     const response = await result.response;
     const text = response.text();
 
-    // Try to extract JSON
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    const json = text.substring(start, end + 1);
+    // Use a regular expression to find the JSON block
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
 
-    const { feedback, analysis } = JSON.parse(json);
-    return { feedback, analysis };
+    if (jsonMatch && jsonMatch[0]) {
+      try {
+        const parsedJSON = JSON.parse(jsonMatch[0]);
+        return { feedback: parsedJSON.feedback, analysis: parsedJSON.analysis };
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError);
+        console.error("Problematic JSON:", jsonMatch[0]);
+        return {
+          feedback: "Sorry, there was an issue processing the feedback.",
+          analysis: ""
+        };
+      }
+    } else {
+      console.error("Could not find JSON in the response:", text);
+      return {
+        feedback: "Sorry, the feedback format was unexpected.",
+        analysis: ""
+      };
+    }
   } catch (err) {
     console.error("Gemini Error:", err);
     return {

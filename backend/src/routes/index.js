@@ -1,9 +1,9 @@
 import {Router} from 'express';
-import {journalController} from '../controllers/journalController.js';
-import JournalEntry from '../models/JournalEntry';
+import journalRoutes from './journal.js';
+
 
 const router = Router();
 
-router.post("/journal", joynalController.createJournalEntry);
+router.use('/api', journalRoutes);
 
 export default router;
