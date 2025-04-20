@@ -1,10 +1,48 @@
 import * as React from 'react';
 import {LineChart} from '@mui/x-charts';
 import {Card, Typography} from "@mui/material";
+import {env} from "@/configs/env";
+import {useEffect, useState} from "react";
+import axios from "axios";
 
-// todo: add a future promotion thing
-export default function EmotionsGraph({past, future}) {
+export default function EmotionsGraph({}) {
+    const [past, setPast] = useState([]);
+    const [future, setFuture] = useState([]);
+
     const moodLabels = ['😢', '🙁', '😐', '🙂', '😄'];
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const res = await axios.get(`${env.backendUrl}/api/journal/summary`);
+                const formatted = res.data.map(entry => ({
+                    day: new Date(entry.day).toLocaleDateString('en-US', { weekday: 'short' }),
+                    mood: Number(entry.overall_emotion) || 3,
+                }));
+                console.log(formatted);
+                setPast(formatted);
+            } catch (err) {
+                console.error("Error fetching journal summary:", err);
+            }
+        }
+
+        const getFuturePredictions = async () => {
+            try {
+                const res = await axios.get(`${env.backendUrl}/api/journal/predict`);
+                const formatted =  res.data.map(entry => ({
+                    day: new Date(entry.day).toLocaleDateString('en-US', { weekday: 'short' }),
+                    mood: Number(entry.predicted_emotion) || 3,
+                }));
+                console.log(formatted);
+                setFuture(formatted);
+            } catch (err) {
+                console.error("Error fetching future predictions:", err);
+            }
+        };
+
+        fetchData();
+        getFuturePredictions();
+    }, []);
 
     const fullData = [...past, ...future];
 

@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from "react";
 import {Box, Button, Typography, TextField, Slider, Chip, CircularProgress} from "@mui/material";
 import axios from "axios";
+import {env} from "@/configs/env";
 
 const moodData = [
     {label: "😢", value: 0, name: "Really Unpleasant", flower: "wilted-rose.png"},
@@ -28,10 +29,10 @@ export default function Index() {
     const handleSubmit = async () => {
         setLoading(true);
         try {
-            const response = await axios.post("/api/log-entry", {
-                mood,
-                factors,
-                entry,
+            const response = await axios.post(`${env.backendUrl}/api/journal`, {
+                emotion: mood+1,
+                impactFactor: factors.join(', '),
+                journal: entry,
             });
             setFeedback(response.data.feedback || "Thanks for sharing! 🌱");
             setStep(3);

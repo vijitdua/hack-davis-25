@@ -4,8 +4,13 @@ import * as React from "react";
 import EmotionalFeedback from "@/components/EmotionalFeedback";
 import AddEntryButton from "@/components/AddEntryButton";
 import TalkToMomoButton from "@/components/TalkToMomoButton";
+import {useEffect} from "react";
+import {env} from "@/configs/env";
+import axios from "axios";
 
 function index() {
+    const [feedback, setFeedback] = React.useState('');
+
     const past = [
         {day: 'Mon', mood: 4},
         {day: 'Tue', mood: 2},
@@ -19,14 +24,23 @@ function index() {
         {day: 'Sun', mood: 3},
     ];
 
+    useEffect(()=>{
+        async function myFunction(){
+            const response = await axios.get(`${env.backendUrl}/api/journal/analysis-summary`)
+            setFeedback(response.data.summary);
+        }
+
+        myFunction();
+    }, [])
+
     return (
         <Container maxWidth="md" sx={{
         }}>
 
             <Typography variant='h3' component='h1'>
-                Good Morning User!
+                Good Morning!
             </Typography>
-            <EmotionalFeedback feedback={'Ur cool boi u got this boi (replace this with legit feedback later boi)'}/>
+            <EmotionalFeedback feedback={ feedback || '...loading...'}/>
 
             <Typography variant='h3' component='h1'>
                 Your Mood Recently
