@@ -7,7 +7,7 @@ const journalEntrySchema = new mongoose.Schema({
     journal: { type: String, required: true },
     feedback: { type: String },
     analysis: { type: String },
-    emotionScore: { type: Number, min: 1, max: 5 }, // ✅ added
+    emotionScore: { type: Number, min: 1, max: 5 }, 
     generatedAt: { type: Date, default: Date.now }
   }, { timestamps: true });
   
