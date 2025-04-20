@@ -17,15 +17,15 @@ export async function generateLLMFeedback({ emotion, impactFactor, journal }) {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const prompt = `
-You are a compassionate AI therapist. Given the user's emotion, impact factor, and journal entry, generate:
+You are a compassionate AI therapist. The user has shared their emotional state and a journal entry. Your task is to provide:
 
-1. A short empathetic feedback message.
-2. A detailed therapeutic analysis based on their journal.
+1. A **final**, short and empathetic message that acknowledges and supports the user emotionally. This is not part of an ongoing conversation.
+2. A detailed therapeutic analysis to help the user reflect on their experience. Do not ask questions or prompt further input.
 
-Reply strictly in this JSON format:
+Respond strictly in this JSON format:
 {
-  "feedback": "short feedback",
-  "analysis": "detailed therapeutic analysis"
+  "feedback": "one-time empathetic message",
+  "analysis": "detailed therapeutic insight"
 }
 
 Emotion: ${emotion}
