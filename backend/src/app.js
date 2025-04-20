@@ -76,7 +76,15 @@ app.use(auth({
     issuerBaseURL: env.auth0IssuerBaseUrl,
     baseURL: env.auth0BaseUrl,
     authRequired: false,
-    auth0Logout: true
+    auth0Logout: true,
+    routes: {
+        callback: '/callback', // optional but explicit
+    },
+    // 👇 THIS is the key part
+    afterCallback: (req, res, session) => {
+        session.returnTo = `http://localhost:3000/`; // 👈 your frontend redirect path
+        return session;
+    }
 }));
 
 // Have an artificial delay on all routes in dev mode so we can test actual network functioning
@@ -89,16 +97,37 @@ app.use((req,res,next)=>{
     }
 })
 
-// Add fake user ID (TODO: replace with Auth0 user ID)
+// get user id
 app.use((req, res, next) => {
-    req.user = req.user || {};
-    req.user.userId = 'abcd';
+    const auth0User = req.oidc?.user;
+
+    if (auth0User) {
+        req.user = {
+            userId: auth0User.sub, // 👈 This is the stable Auth0 user ID (e.g., "google-oauth2|1234567890")
+            email: auth0User.email,
+            name: auth0User.name,
+            picture: auth0User.picture,
+        };
+    }
+
     next();
 });
 
 // Express Routes
-app.get(`/`, (req, res) => res.status(200).send('alive'));
+app.get(`/`, (req, res) => res.redirect('http://localhost:3000/'));
 app.use(allRoutes);
+
+// tells u if ur logged in
+app.get('/api/me', (req, res) => {
+    if (!req.user || !req.user.userId) {
+        return res.status(401).json({ loggedIn: false });
+    }
+    return res.status(200).json({
+        loggedIn: true,
+        user: req.user
+    });
+});
+
 
 // Use Express App in http server
 const server = http.createServer(app);
